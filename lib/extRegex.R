@@ -6,11 +6,13 @@ library(dplyr)
 
 sink(type = 'message')
 
-extRegex <- function(string,regex,scriptpath){
+extRegex <- function(string,pattern,scriptpath){
+
+	string <- gsub('\n',' ',string)
 
         call <- paste('python3',scriptpath)
         string <- glue_collapse(string,sep = '\n')
-        stringAndRegex <- glue_collapse(c(regex,string),sep = '\n')
+        stringAndRegex <- glue_collapse(c(pattern,string),sep = '\n')
 
         res <- system(call,
                       intern = TRUE,
@@ -20,5 +22,6 @@ extRegex <- function(string,regex,scriptpath){
                 str_split('\n')%>%
                 unlist()%>%
                 sapply(FUN = function(x) x == 'True')
+
         }
 

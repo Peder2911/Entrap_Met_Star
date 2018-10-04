@@ -12,14 +12,31 @@ require(tools)
 require(jsonlite)
 require(redux)
 
-# Utility stuff ####################
-
 scriptpath <- ComfyInTurns::myPath()
+
+# Read config from stdin (dfi) #####
 
 config <- readLines('stdin')%>%
 	fromJSON()
 
 sink(type = 'message')
+
+# Assign config values #############
+# slims down the code ##############
+
+col <- config[['field to search']]%>%
+	unlist()
+
+pattern <- config[['regex pattern']]%>%
+	unlist()
+
+chunksize <- config[['chunksize']]%>%
+	unlist()
+
+pyregex <- dirname(scriptpath)%>%
+	paste('lib/pyRegex.py',sep = '/')
+
+key <- config$redis$listkey
 
 # Read my functions ################
 
@@ -31,6 +48,7 @@ dirname(scriptpath)%>%
 	source()
 
 # Redis stuff ######################
+# the config might be useless ######
 
 sink(devnull)
 redis_config(host = config$redis$hostname,
@@ -38,63 +56,27 @@ redis_config(host = config$redis$hostname,
 	     db = config$redis$db)
 sink()
 
-r <- hiredis()
+redis <- hiredis()
 
-# Read data ########################
+# Process data #####################
 
-ln <- ''
-indata <- character()
-
-while(!is.null(ln)){
-	ln <- r$LPOP(config$redis$listkey)
-	indata <- c(indata,ln)
+# See functions in lib/ ############
+extRegexDf <- function(df,col,pattern,pyregex){
+	matches <- df[col]%>%
+		      unlist()%>%
+		      extRegex(pattern,pyregex)
+	df <- df[matches,]
 	}
 
-if(length(indata) > 1){
 
-	# text to csv ##############
+DBgratia::redisChunkApply(redis,
+                          key,
+                          FUN = extRegexDf, 
+                          chunksize = chunksize,
+                          verbose = TRUE,
+			  col = col,
+			  pattern = pattern,
+			  pyregex = pyregex)
 
-	indata <- glue_collapse(indata,sep = '\n')
-	dat <- read.csv(text = indata,stringsAsFactors = FALSE)
-	rm(indata)
-	
-	# Do stuff to the data #####
-
-	# doStuff(dat)
-
-	field <- config[['field to search']]%>%
-			unlist()
-	regex <- config[['regex pattern']]
-	scriptpath <- scriptpath%>%
-		dirname()%>%
-		paste('lib/pyRegex.py',sep = '/')
-	coldat <- dat[field]%>%
-			unlist()
-
-	keep <- coldat%>% 
-			extRegex(regex,scriptpath)
-
-	dat <- dat[keep,]
-
-
-	fauxfile <- textConnection('fauxfile','w')
-	write.csv(dat,fauxfile)
-	rm(dat)
-	
-	# shut it up
-	sink(devnull)
-	write(fauxfile,'tee.txt')
-
-	sapply(fauxfile,FUN = function(x){
-	     		r$RPUSH(config$redis$listkey,x)
-	     		})
-	sink()
-
-	}else{
-
-	# Or else? #################
-
-	warning('no data read')
-	}
 
 
