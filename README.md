@@ -1,4 +1,4 @@
-# DB gratia
+# Entrap Met Star
 
 This is a regex pattern-matching module for use with the DFI text mining framework.
 
@@ -10,7 +10,7 @@ This is a regex pattern-matching module for use with the DFI text mining framewo
 
 :warning: Additionally, you need to install [DBgratia](https://github.com/peder2911/DB_gratia), which is the collection of redis-communication functions i am using to make all of these scripts less verbose.
 
-DB gratia is a working title, and is a secret anagram :ghost:
+EMS is a working title, and is a secret anagram :ghost:
 
 
 
