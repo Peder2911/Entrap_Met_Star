@@ -7,8 +7,6 @@ sink(file = devnull,type = 'message')
 require(stringr)
 require(glue)
 
-require(tools)
-
 require(jsonlite)
 require(redux)
 
@@ -33,6 +31,11 @@ pattern <- config[['regex pattern']]%>%
 chunksize <- config[['chunksize']]%>%
 	unlist()
 
+keepdiscard <- config[['keep or discard']]%>%
+	unlist()
+
+# path stuff #######################
+
 pyregex <- dirname(scriptpath)%>%
 	paste('lib/pyRegex.py',sep = '/')
 
@@ -40,9 +43,6 @@ key <- config$redis$listkey
 
 # Read my functions ################
 
-dirname(scriptpath)%>%
-	paste('lib/funcs.R',sep = '/')%>%
-	source()
 dirname(scriptpath)%>%
 	paste('lib/extRegex.R',sep ='/')%>%
 	source()
@@ -61,11 +61,17 @@ redis <- hiredis()
 # Process data #####################
 
 # See functions in lib/ ############
-extRegexDf <- function(df,col,pattern,pyregex){
+
+extRegexDf <- function(df,col,pattern,pyregex,keepdiscard){
 	matches <- df[col]%>%
 		      unlist()%>%
 		      extRegex(pattern,pyregex)
-	df <- df[matches,]
+	if(keepdiscard == 'keep'){
+		df <- df[matches,]
+		}
+		else {
+		df <- df[!matches,]	
+		}
 	}
 
 
@@ -76,7 +82,8 @@ DBgratia::redisChunkApply(redis,
                           verbose = TRUE,
 			  col = col,
 			  pattern = pattern,
-			  pyregex = pyregex)
+			  pyregex = pyregex,
+			  keepdiscard = keepdiscard)
 
 
 

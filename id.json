@@ -6,6 +6,7 @@
  "options":
  {
 	 "field to search":"listmenu headline,body",
-	 "regex pattern":"freetext" 
+	 "regex pattern":"freetext",
+	 "keep or discard":"listmenu keep,discard"
  }
 }

@@ -1,9 +1,8 @@
 devnull <- file('/dev/null','w')
-sink(file = devnull,type = 'message')
 
+sink(file = devnull,type = 'message')
 library(glue)
 library(dplyr)
-
 sink(type = 'message')
 
 extRegex <- function(string,pattern,scriptpath){
