@@ -80,10 +80,10 @@ DBgratia::redisChunkApply(redis,
                           FUN = extRegexDf, 
                           chunksize = chunksize,
                           verbose = TRUE,
-			  col = col,
-			  pattern = pattern,
-			  pyregex = pyregex,
-			  keepdiscard = keepdiscard)
+                          col = col,
+                          pattern = pattern,
+                          pyregex = pyregex,
+                          keepdiscard = keepdiscard)
 
 
 
